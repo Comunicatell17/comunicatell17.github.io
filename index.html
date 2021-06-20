@@ -14,7 +14,6 @@
 
     <script src="js/init.js"></script>
     
-    
   </head>
   <body>
     <h1>Comunicatell</h1>
@@ -38,7 +37,7 @@
           
             usuario = usuarioAuth.email;
            
-            muestraDatos();
+            muestraMensajes();
           } else {
            
             await auth.signInWithRedirect(provider);
@@ -51,7 +50,7 @@
      
       function agrega() {
         
-        firestore.collection("DATOS").add({
+        firestore.collection("MENSAJE").add({
           USUARIO: usuario,
         
           TEXTO: texto.value.trim(),
@@ -62,7 +61,7 @@
       
       function muestraDatos() {
      
-        firestore.collection("DATOS").orderBy("TIMESTAMP", "desc")
+        firestore.collection("MENSAJE").orderBy("TIMESTAMP", "desc")
           .onSnapshot(
             /** Función que muestra los datos enviados por el servidor. Si los
              * datos cambian en el servidor, se vuelve a invocar esta función y
