@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Comunicatell</title>
+    <link rel="stylesheet" href="estilos.css">
+    <!-- Carga el núcleo de Firebase JS SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <!-- Agrega el manejo de autenticación. -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+
+    <script src="js/init.js"></script>
+    
+  </head>
+  <body>
+    <h1>Comunicatell</h1>
+    <form action="javascript:agrega();">
+      <input id="texto" type="text" required placeholder="Mensaje">
+      <button>Envio gratis</button>
+    </form>
+    <ol id="mensajes"><li><progress max="100">Cargando…</progress></li></ol>
+    <script>
+      
+      const auth = firebase.auth();
+      
+      const provider = new firebase.auth.GoogleAuthProvider();
+      
+      provider.setCustomParameters({ prompt: "select_account" });
+      
+      auth.onAuthStateChanged(
+        
+        async usuarioAuth => {
+          if (usuarioAuth && usuarioAuth.email) {
+          
+            usuario = usuarioAuth.email;
+           
+            muestraDatos();
+          } else {
+           
+            await auth.signInWithRedirect(provider);
+          }
+        },
+       
+        procesaError
+      );
+      const firestore = firebase.firestore();
+     
+      function agrega() {
+        
+        firestore.collection("DATOS").add({
+          USUARIO: usuario,
+        
+          TEXTO: texto.value.trim(),
+          
+          TIMESTAMP: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      
+      function muestraDatos() {
+     
+        firestore.collection("DATOS").orderBy("TIMESTAMP", "desc")
+          .onSnapshot(
+            /** Función que muestra los datos enviados por el servidor. Si los
+             * datos cambian en el servidor, se vuelve a invocar esta función y
+             * recibe los datos actualizados.
+              @param {Array} querySnapshot estructura parecida a un Array, que
+             * contiene una copia de los datos en el servidor. */
+            querySnapshot => {
+              // Vacía la lista con los mensajes.
+              // @ts-ignore
+              mensajes.innerHTML = "";
+              /* Revisa un por uno los registros de la consulta y los muestra.
+               * El iterador "doc" es un registro de la base de datos. */
+              querySnapshot.forEach(doc => {
+                // recupera los datos almacenados en el registro.
+                const data = doc.data();
+                
+                var d = data.TIMESTAMP.toDate(),
+                dformat = [d.getDate(), d.getMonth()+1, d.getFullYear()].join('/')+' '+
+                          [d.getHours(),d.getMinutes(),d.getSeconds()].join(':');
+                /* Agrega un li con los datos del registro, que se codifican
+                 * para evitar inyección de código. */
+                // @ts-ignore
+                mensajes.innerHTML += /* html */
+                  `<li><u>${cod(data.USUARIO)}</u> ${dformat}<br>${cod(data.TEXTO)}</li>`;
+              })
+            },
+            /* Función que se invoca cuando hay un error. Muestra el error. Al
+             * invocar esta función la conexión se cancela. Por lo mismo, se
+             * vuelve a conectar. */
+            e => {
+              procesaError(e);
+              
+              muestraDatos();
+            }
+          )
+      }
+      function procesaError(e) {
+        console.log(e);
+        alert(e.message);
+      }
+
+      const codMap = Object.freeze(new Map([['&', '&amp;'], ['<', '&lt;'],
+      ['>', '&gt;'], ['"', '&quot;'], ["'", '&#039;']]));
+      function cod(texto) {
+        return (texto || "").replace(/[&<>"']/g, letra => codMap.get(letra));
+      }
+    </script>
+  </body>
+</html>
