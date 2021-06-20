@@ -24,12 +24,14 @@
     <ol id="mensajes"><li><progress max="100">Cargando…</progress></li></ol>
     <script>
       
+      let usuario = "";
+
       const auth = firebase.auth();
-      
+
       const provider = new firebase.auth.GoogleAuthProvider();
-      
+
       provider.setCustomParameters({ prompt: "select_account" });
-      
+
       auth.onAuthStateChanged(
         
         async usuarioAuth => {
@@ -52,14 +54,14 @@
         
         firestore.collection("MENSAJE").add({
           USUARIO: usuario,
-        
+
           TEXTO: texto.value.trim(),
           
           TIMESTAMP: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
       
-      function muestraDatos() {
+      function muestraMensajes() {
      
         firestore.collection("MENSAJE").orderBy("TIMESTAMP", "desc")
           .onSnapshot(
@@ -94,7 +96,7 @@
             e => {
               procesaError(e);
               
-              muestraDatos();
+              muestraMensajes();
             }
           )
       }
